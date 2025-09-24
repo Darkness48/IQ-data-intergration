@@ -1,0 +1,20 @@
+import time
+import numpy as np
+
+interval = 600  # 10분
+file_index = 0
+
+with open('/tmp/data_pipe', 'rb') as f:
+    while True:
+        data = []
+        start = time.time()
+        while time.time() - start < interval:
+            chunk = f.read(4)  # float32 = 4 bytes
+            if not chunk:
+                break
+            value = np.frombuffer(chunk, dtype=np.float32)[0]
+            data.append(value)
+        
+        np.array(data, dtype=np.float32).tofile(f"block_{file_index}.dat")
+        print(f"Saved block_{file_index}.dat")
+        file_index += 1
