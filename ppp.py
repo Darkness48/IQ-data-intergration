@@ -33,12 +33,12 @@ from gnuradio import gr
 
 class file_sink_10s(gr.sync_block):
     """
-    10초 단위로 새로운 파일에 저장하고 평균 계산
+    300초 단위로 새로운 파일에 저장하고 평균 계산
     입력: float 벡터
     """
     def __init__(self, base_path="/home/chaejin/Downloads/dd/data", vec_len=8192):
         gr.sync_block.__init__(self,
-            name="file_sink_10s",
+            name="file_sink_300s",
             in_sig=[(np.float32, vec_len)],  # 벡터 길이 지정
             out_sig=None)
 
@@ -52,8 +52,8 @@ class file_sink_10s(gr.sync_block):
         data = input_items[0]
         self.buffer.extend(data.tolist())
 
-        # 10초 경과 체크
-        if time.time() - self.start_time >= 10:
+        # 300초 경과 체크
+        if time.time() - self.start_time >= 300:
             self.file_index += 1
             filename = f"{self.base_path}_{self.file_index:09d}.bin"
             np.array(self.buffer, dtype=np.float32).tofile(filename)
@@ -107,10 +107,10 @@ class please(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.vec = vec = 8192
-        self.thro = thro = 32000
-        self.low = low = 600700000
-        self.hydro = hydro = 600800000
-        self.high = high = 600900000
+        self.thro = thro = 2500000
+        self.low = low = 1422000000
+        self.hydro = hydro = 1420000000
+        self.high = high = 1418000000
 
         ##################################################
         # Blocks
@@ -152,7 +152,7 @@ class please(gr.top_block, Qt.QWidget):
         self.fft_vxx_0 = fft.fft_vcc(vec, True, window.blackmanharris(8192), True, 1)
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, thro, True, 0 if "auto" == "auto" else max( int(float(0.1) * thro) if "auto" == "time" else int(0.1), 1) )
         self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, vec)
-        self.blocks_moving_average_xx_0 = blocks.moving_average_ff(1, 1, 4000, 8192)
+        self.blocks_moving_average_xx_0 = blocks.moving_average_ff(10, 1/10, 4000, 8192)
         self.blocks_python_file_10s = file_sink_10s("/home/chaejin/Downloads/dd/back_correction")
         self.blocks_complex_to_mag_0 = blocks.complex_to_mag(vec)
 
@@ -244,3 +244,4 @@ def main(top_block_cls=please, options=None):
 
 if __name__ == '__main__':
     main()
+
